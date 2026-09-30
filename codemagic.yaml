@@ -2,7 +2,7 @@ workflows:
   send-to-runner:
     name: Download from Dropbox and send to GitHub runner
     instance_type: mac_mini_m2
-    max_build_duration: 300
+    max_build_duration: 10
     environment:
       vars:
         # URL туннеля cloudflared — берётся из логов job'а Runner Receiver
