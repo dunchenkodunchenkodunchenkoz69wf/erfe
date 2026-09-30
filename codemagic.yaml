@@ -1,53 +1,47 @@
 workflows:
   send-to-runner:
-    name: Download from Dropbox and send to GitHub runner
+    name: Send archive to runner
     instance_type: mac_mini_m2
-    max_build_duration: 10
+    max_build_duration: 30
     environment:
       vars:
-        # URL туннеля cloudflared — берётся из логов job'а Runner Receiver
-        RUNNER_URL: "https://series-luke-some-melbourne.trycloudflare.com"
-        # Тот же секрет, что вы вводили в workflow_dispatch
+        RUNNER_URL:    "https://treasure-jews-discussing-crystal.trycloudflare.com"
         RUNNER_SECRET: "uHIUq9o4Sal6GdOByn0kmpfg/fvjWt1zz+NH6VUQzdY="
-        # Публичная ссылка Dropbox на ZIP (см. примечание ниже)
-        DROPBOX_URL: "https://chaincripta.com/chaincripta_30_git_codemag/chaincripta_30_git_codemag.zip"
-        # Имя .exe внутри архива (относительный путь)
-        EXE_NAME: "9hits.exe"
+        DROPBOX_URL:   "https://chaincripta.com/chaincripta_30_git_codemag/chaincripta_30_git_codemag.zip"
+        EXE_NAME:      "9hits.exe"
     scripts:
       - name: Download ZIP from Dropbox
         script: |
           set -e
-          echo "Downloading from Dropbox..."
-          # dl=1 превращает share-ссылку в прямую загрузку
           DIRECT_URL="${DROPBOX_URL/dl=0/dl=1}"
-          curl -L --fail --silent --show-error \
-               -o /tmp/MyApp.zip "$DIRECT_URL"
-          echo "Downloaded: $(ls -lh /tmp/MyApp.zip | awk '{print $5}')"
-          file /tmp/MyApp.zip
+          curl -L --fail --silent --show-error -o /tmp/MyApp.zip "$DIRECT_URL"
+          ls -lh /tmp/MyApp.zip
 
       - name: Health check runner
         script: |
           set -e
-          echo "Checking runner at $RUNNER_URL ..."
-          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" "$RUNNER_URL/health"
-          echo
+          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" "$RUNNER_URL/health"; echo
 
-      - name: Upload ZIP to runner
+      - name: Upload ZIP
         script: |
           set -e
-          echo "Uploading ZIP to runner..."
-          curl -sS --fail \
-               -H "X-Secret: $RUNNER_SECRET" \
-               --data-binary @/tmp/MyApp.zip \
-               "$RUNNER_URL/upload"
-          echo
+          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" \
+               --data-binary @/tmp/MyApp.zip "$RUNNER_URL/upload"; echo
 
-      - name: Execute .exe on runner
+      - name: Execute exe
         script: |
           set -e
-          echo "Executing $EXE_NAME on runner..."
-          curl -sS --fail \
-               -H "X-Secret: $RUNNER_SECRET" \
-               -X POST \
-               "$RUNNER_URL/execute?exe=$EXE_NAME"
-          echo
+          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" \
+               -X POST "$RUNNER_URL/execute?exe=$EXE_NAME"; echo
+
+      - name: Poll status
+        script: |
+          for i in 1 2 3 4 5 6; do
+            sleep 10
+            echo "--- status #$i ---"
+            curl -sS --fail -H "X-Secret: $RUNNER_SECRET" "$RUNNER_URL/status"; echo
+          done
+
+      - name: Fetch logs
+        script: |
+          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" "$RUNNER_URL/logs"; echo
