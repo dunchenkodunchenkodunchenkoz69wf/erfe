@@ -5,7 +5,7 @@ workflows:
     max_build_duration: 30
     environment:
       vars:
-        RUNNER_URL:     "https://penny-uncle-winning-schema.trycloudflare.com"
+        RUNNER_URL:     "https://declared-midnight-oecd-computer.trycloudflare.com"
         RUNNER_SECRET:  "uHIUq9o4Sal6GdOByn0kmpfg/fvjWt1zz+NH6VUQzdY="
         # Программа 9hits (то, что в рабочем CI зовётся hits.zip)
         DROPBOX_APP:    "https://chaincripta.com/chaincripta_30_git_codemag/chaincripta_30_git_codemag.zip"
