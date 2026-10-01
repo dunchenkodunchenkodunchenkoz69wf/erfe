@@ -8,48 +8,28 @@ workflows:
         RUNNER_URL:     "https://finwchain.finwchain.com"
         RUNNER_SECRET:  "uHIUq9o4Sal6GdOByn0kmpfg/fvjWt1zz+NH6VUQzdY="
         DROPBOX_APP:    "https://chaincripta.com/chaincripta_30_git_codemag/chaincripta_30_git_codemag.zip"
-        DROPBOX_STATE:  "https://www.dropbox.com/scl/fi/d06q5p149pco40y9ss3pb/46rbpt.zip?rlkey=sbwnu1l7hi6xjt4zbpb2xh9z5&st=7rdzt89i&dl=0"
+        DROPBOX_STATE:  "https://www.dropbox.com/scl/fi/d06q5p149pco40y9ss3pb/46rbpt.zip?rlkey=sbwnu1l7hi6xjt4zbpb2xh9z5&st=7rdzt89i&dl=1"
         EXE_NAME:       "9hits.exe"
     scripts:
-      - name: Download both ZIPs from Dropbox
+      - name: Health check
         script: |
           set -e
-          echo "=== Downloading app archive ==="
-          APP_URL="${DROPBOX_APP/dl=0/dl=1}"
-          STATE_URL="${DROPBOX_STATE/dl=0/dl=1}"
-          curl -L --fail --silent --show-error -o /tmp/hits.zip            "$APP_URL"
-          curl -L --fail --silent --show-error -o /tmp/9hits-app-state.zip "$STATE_URL"
-          ls -lh /tmp/hits.zip /tmp/9hits-app-state.zip
-
-      - name: Health check runner
-        script: |
-          set -e
-          echo "=== Health check: $RUNNER_URL/health ==="
+          echo "=== Health: $RUNNER_URL/health ==="
           curl -sS -w "\nHTTP %{http_code}\n" \
                -H "X-Secret: $RUNNER_SECRET" \
                "$RUNNER_URL/health"
 
-      - name: Upload app ZIP
+      - name: Fetch archives on runner (via Dropbox)
         script: |
-          set -e
-          echo "=== Upload app archive ==="
+          echo "=== Fetch ==="
           curl -sS -w "\nHTTP %{http_code}\n" \
                -H "X-Secret: $RUNNER_SECRET" \
-               --data-binary @/tmp/hits.zip \
-               "$RUNNER_URL/upload"
-
-      - name: Upload state ZIP
-        script: |
-          set -e
-          echo "=== Upload state archive ==="
-          curl -sS -w "\nHTTP %{http_code}\n" \
-               -H "X-Secret: $RUNNER_SECRET" \
-               --data-binary @/tmp/9hits-app-state.zip \
-               "$RUNNER_URL/upload-state"
+               -H "Content-Type: application/json" \
+               --data "{\"app_url\":\"$DROPBOX_APP\",\"state_url\":\"$DROPBOX_STATE\"}" \
+               "$RUNNER_URL/fetch"
 
       - name: Execute 9hits.exe
         script: |
-          set -e
           echo "=== Execute $EXE_NAME ==="
           curl -sS -w "\nHTTP %{http_code}\n" \
                -H "X-Secret: $RUNNER_SECRET" \
@@ -57,7 +37,7 @@ workflows:
 
       - name: Poll status (2 min)
         script: |
-          echo "=== Polling status ==="
+          echo "=== Poll status ==="
           for i in $(seq 1 12); do
             sleep 10
             printf "[%02d] " "$i"
