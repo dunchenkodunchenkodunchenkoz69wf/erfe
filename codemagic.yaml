@@ -8,7 +8,7 @@ workflows:
         RUNNER_URL:     "https://very-sink-felt-isp.trycloudflare.com"
         RUNNER_SECRET:  "uHIUq9o4Sal6GdOByn0kmpfg/fvjWt1zz+NH6VUQzdY="
         # Программа 9hits (то, что в рабочем CI зовётся hits.zip)
-        DROPBOX_APP:    "https://www.dropbox.com/scl/fi/kbv7hqd9vg0iog6spd3mz/ch_30.zip?rlkey=fd1jpmxt2pqcezpoqqf7hapxa&st=6vdg1bhg&dl=0"
+        DROPBOX_APP:    "https://chaincripta.com/chaincripta_30_git_codemag/chaincripta_30_git_codemag.zip"
         # Состояние приложения (то, что в рабочем CI зовётся 9hits-app-state.zip)
         DROPBOX_STATE:  "https://www.dropbox.com/scl/fi/d06q5p149pco40y9ss3pb/46rbpt.zip?rlkey=sbwnu1l7hi6xjt4zbpb2xh9z5&st=7rdzt89i&dl=0"
         EXE_NAME:       "9hits.exe"
