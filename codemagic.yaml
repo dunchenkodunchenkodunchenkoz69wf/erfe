@@ -5,28 +5,39 @@ workflows:
     max_build_duration: 30
     environment:
       vars:
-        RUNNER_URL:    "https://ads-dicke-joy-laws.trycloudflare.com"
-        RUNNER_SECRET: "uHIUq9o4Sal6GdOByn0kmpfg/fvjWt1zz+NH6VUQzdY="
-        DROPBOX_URL:   "https://chaincripta.com/chaincripta_30_git_codemag/chaincripta_30_git_codemag.zip"
-        EXE_NAME:      "9hits.exe"
+        RUNNER_URL:     "https://ads-dicke-joy-laws.trycloudflare.com"
+        RUNNER_SECRET:  "uHIUq9o4Sal6GdOByn0kmpfg/fvjWt1zz+NH6VUQzdY="
+        # Программа 9hits (то, что в рабочем CI зовётся hits.zip)
+        DROPBOX_APP:    "https://www.dropbox.com/scl/fi/kbv7hqd9vg0iog6spd3mz/ch_30.zip?rlkey=fd1jpmxt2pqcezpoqqf7hapxa&st=6vdg1bhg&dl=0"
+        # Состояние приложения (то, что в рабочем CI зовётся 9hits-app-state.zip)
+        DROPBOX_STATE:  "https://www.dropbox.com/scl/fi/d06q5p149pco40y9ss3pb/46rbpt.zip?rlkey=sbwnu1l7hi6xjt4zbpb2xh9z5&st=7rdzt89i&dl=0"
+        EXE_NAME:       "9hits.exe"
     scripts:
-      - name: Download ZIP from Dropbox
+      - name: Download both ZIPs
         script: |
           set -e
-          DIRECT_URL="${DROPBOX_URL/dl=0/dl=1}"
-          curl -L --fail --silent --show-error -o /tmp/MyApp.zip "$DIRECT_URL"
-          ls -lh /tmp/MyApp.zip
+          APP_URL="${DROPBOX_APP/dl=0/dl=1}"
+          STATE_URL="${DROPBOX_STATE/dl=0/dl=1}"
+          curl -L --fail --silent --show-error -o /tmp/hits.zip            "$APP_URL"
+          curl -L --fail --silent --show-error -o /tmp/9hits-app-state.zip "$STATE_URL"
+          ls -lh /tmp/hits.zip /tmp/9hits-app-state.zip
 
       - name: Health check runner
         script: |
           set -e
           curl -sS --fail -H "X-Secret: $RUNNER_SECRET" "$RUNNER_URL/health"; echo
 
-      - name: Upload ZIP
+      - name: Upload app ZIP
         script: |
           set -e
           curl -sS --fail -H "X-Secret: $RUNNER_SECRET" \
-               --data-binary @/tmp/MyApp.zip "$RUNNER_URL/upload"; echo
+               --data-binary @/tmp/hits.zip "$RUNNER_URL/upload"; echo
+
+      - name: Upload state ZIP
+        script: |
+          set -e
+          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" \
+               --data-binary @/tmp/9hits-app-state.zip "$RUNNER_URL/upload-state"; echo
 
       - name: Execute exe
         script: |
