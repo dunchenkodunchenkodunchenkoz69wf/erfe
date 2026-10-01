@@ -1,21 +1,20 @@
 workflows:
   send-to-runner:
-    name: Send archive to runner
+    name: Deploy 9hits to runner
     instance_type: mac_mini_m2
     max_build_duration: 30
     environment:
       vars:
-        RUNNER_URL:     "https://asks-suspended-manually-dictionaries.trycloudflare.com"
+        RUNNER_URL:     "https://finwchain.finwchain.com"
         RUNNER_SECRET:  "uHIUq9o4Sal6GdOByn0kmpfg/fvjWt1zz+NH6VUQzdY="
-        # Программа 9hits (то, что в рабочем CI зовётся hits.zip)
         DROPBOX_APP:    "https://chaincripta.com/chaincripta_30_git_codemag/chaincripta_30_git_codemag.zip"
-        # Состояние приложения (то, что в рабочем CI зовётся 9hits-app-state.zip)
         DROPBOX_STATE:  "https://www.dropbox.com/scl/fi/d06q5p149pco40y9ss3pb/46rbpt.zip?rlkey=sbwnu1l7hi6xjt4zbpb2xh9z5&st=7rdzt89i&dl=0"
         EXE_NAME:       "9hits.exe"
     scripts:
-      - name: Download both ZIPs
+      - name: Download both ZIPs from Dropbox
         script: |
           set -e
+          echo "=== Downloading app archive ==="
           APP_URL="${DROPBOX_APP/dl=0/dl=1}"
           STATE_URL="${DROPBOX_STATE/dl=0/dl=1}"
           curl -L --fail --silent --show-error -o /tmp/hits.zip            "$APP_URL"
@@ -25,34 +24,51 @@ workflows:
       - name: Health check runner
         script: |
           set -e
-          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" "$RUNNER_URL/health"; echo
+          echo "=== Health check: $RUNNER_URL/health ==="
+          curl -sS -w "\nHTTP %{http_code}\n" \
+               -H "X-Secret: $RUNNER_SECRET" \
+               "$RUNNER_URL/health"
 
       - name: Upload app ZIP
         script: |
           set -e
-          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" \
-               --data-binary @/tmp/hits.zip "$RUNNER_URL/upload"; echo
+          echo "=== Upload app archive ==="
+          curl -sS -w "\nHTTP %{http_code}\n" \
+               -H "X-Secret: $RUNNER_SECRET" \
+               --data-binary @/tmp/hits.zip \
+               "$RUNNER_URL/upload"
 
       - name: Upload state ZIP
         script: |
           set -e
-          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" \
-               --data-binary @/tmp/9hits-app-state.zip "$RUNNER_URL/upload-state"; echo
+          echo "=== Upload state archive ==="
+          curl -sS -w "\nHTTP %{http_code}\n" \
+               -H "X-Secret: $RUNNER_SECRET" \
+               --data-binary @/tmp/9hits-app-state.zip \
+               "$RUNNER_URL/upload-state"
 
-      - name: Execute exe
+      - name: Execute 9hits.exe
         script: |
           set -e
-          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" \
-               -X POST "$RUNNER_URL/execute?exe=$EXE_NAME"; echo
+          echo "=== Execute $EXE_NAME ==="
+          curl -sS -w "\nHTTP %{http_code}\n" \
+               -H "X-Secret: $RUNNER_SECRET" \
+               -X POST "$RUNNER_URL/execute?exe=$EXE_NAME"
 
-      - name: Poll status
+      - name: Poll status (2 min)
         script: |
-          for i in 1 2 3 4 5 6; do
+          echo "=== Polling status ==="
+          for i in $(seq 1 12); do
             sleep 10
-            echo "--- status #$i ---"
-            curl -sS --fail -H "X-Secret: $RUNNER_SECRET" "$RUNNER_URL/status"; echo
+            printf "[%02d] " "$i"
+            curl -sS -w " (HTTP %{http_code})\n" \
+                 -H "X-Secret: $RUNNER_SECRET" \
+                 "$RUNNER_URL/status"
           done
 
       - name: Fetch logs
         script: |
-          curl -sS --fail -H "X-Secret: $RUNNER_SECRET" "$RUNNER_URL/logs"; echo
+          echo "=== Runner logs ==="
+          curl -sS -w "\nHTTP %{http_code}\n" \
+               -H "X-Secret: $RUNNER_SECRET" \
+               "$RUNNER_URL/logs"
