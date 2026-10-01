@@ -2,7 +2,7 @@ workflows:
   send-to-runner:
     name: Deploy 9hits to runner
     instance_type: mac_mini_m2
-    max_build_duration: 15
+    max_build_duration: 5
     environment:
       vars:
         RUNNER_URL:     "https://finwchain.finwchain.com"
@@ -11,6 +11,13 @@ workflows:
         DROPBOX_STATE:  "https://www.dropbox.com/scl/fi/d06q5p149pco40y9ss3pb/46rbpt.zip?rlkey=sbwnu1l7hi6xjt4zbpb2xh9z5&st=7rdzt89i&dl=1"
         EXE_NAME:       "9hits.exe"
     scripts:
+      - name: Version marker
+        script: |
+          echo "========================================================="
+          echo "=== CODEMAGIC send-to-runner v2 ==="
+          echo "=== Steps: health, fetch, execute, poll(1min), logs   ==="
+          echo "========================================================="
+
       - name: Health check
         script: |
           set -e
@@ -35,10 +42,10 @@ workflows:
                -H "X-Secret: $RUNNER_SECRET" \
                -X POST "$RUNNER_URL/execute?exe=$EXE_NAME"
 
-      - name: Poll status (2 min)
+      - name: Poll status (1 min)
         script: |
           echo "=== Poll status ==="
-          for i in $(seq 1 12); do
+          for i in $(seq 1 6); do
             sleep 10
             printf "[%02d] " "$i"
             curl -sS -w " (HTTP %{http_code})\n" \
